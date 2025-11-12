@@ -1,6 +1,6 @@
-# MLOps Project: Text Classification with DistilBERT
+# Containerized MLOps Pipeline for Text Classification with DistilBERT
 
-A machine learning operations (MLOps) project for fine-tuning transformer models on GLUE benchmark tasks. This project demonstrates best practices for training, experiment tracking, and hyperparameter optimization using PyTorch Lightning, Weights & Biases, and containerization.
+A reproducible NLP training workflow using PyTorch Lightning, Docker, and Weights & Biases.
 
 ## 📋 Overview
 
@@ -50,7 +50,7 @@ mlops/
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone <repo-url>
    cd mlops
    ```
 
@@ -78,7 +78,7 @@ mlops/
    ```bash
    # .env
    WANDB_API_KEY=your_wandb_api_key_here
-   WANDB_PROJECT=mlops_proj
+   WANDB_PROJECT=your_project_name
    ```
    
    **Important:** Add `.env` to your `.gitignore` to avoid committing sensitive credentials:
@@ -99,12 +99,12 @@ python main.py
 ```bash
 python main.py \
   --learning_rate 5e-5 \
-  --train_batch_size 32 \
-  --eval_batch_size 64 \
+  --lr_schedule_type linear \
   --warmup_steps 100 \
   --weight_decay 0.01 \
-  --gradient_clip_val 1.0 \
-  --lr_schedule_type cosine
+  --train_batch_size 32 \
+  --eval_batch_size 64 \
+  --gradient_clip_val 1.0
 ```
 
 ### Available Arguments
@@ -144,7 +144,7 @@ docker run --rm -it --env-file .env \
 docker run --rm -it --env-file .env \
   -v $(pwd)/models:/app/models \
   -v $(pwd)/experiments:/app/experiments \
-  mlops-training --learning_rate 5e-5 --train_batch_size 32
+  mlops-training --learning_rate 5e-5 --lr_schedule_type linear
 ```
 
 **Note:** The `--env-file .env` flag passes your environment variables (including W&B credentials) to the container.
@@ -160,50 +160,6 @@ All experiments are automatically logged to Weights & Biases, including:
 
 Access your experiments at `https://wandb.ai/<your-username>/<project-name>`
 
-## 💾 Model Checkpoints
-
-The training script automatically saves checkpoints based on different criteria:
-
-- **Best F1 Score**: `lr2e-05_ls-cos_ws50_wd0.005_tb16_eb32_gc0.5-best-f1-{epoch}-{f1}.ckpt`
-- **Best Accuracy**: `lr2e-05_ls-cos_ws50_wd0.005_tb16_eb32_gc0.5-best-acc-{epoch}-{accuracy}.ckpt`
-- **Best Validation Loss**: `lr2e-05_ls-cos_ws50_wd0.005_tb16_eb32_gc0.5-best-loss-{epoch}-{val_loss}.ckpt`
-- **Last Checkpoint**: `lr2e-05_ls-cos_ws50_wd0.005_tb16_eb32_gc0.5-last.ckpt`
-
-All checkpoints are saved in the `models/checkpoints/` directory.
-
-## 📦 Key Dependencies
-
-- **PyTorch** (`torch>=2.9.0`): Deep learning framework
-- **PyTorch Lightning** (`lightning>=2.5.6`): High-level training framework
-- **Transformers** (`transformers>=4.57.1`): Hugging Face model library
-- **Datasets** (`datasets>=4.4.1`): GLUE dataset loading
-- **Weights & Biases** (`wandb>=0.22.3`): Experiment tracking
-- **Evaluate** (`evaluate>=0.4.6`): Model evaluation metrics
-- **Optuna** (`optuna>=4.6.0`): Hyperparameter optimization
-
-## 🔧 Development
-
-The project uses a modular structure:
-
-- **Data Module** (`glue_data_module.py`): Handles data loading, tokenization, and batching for GLUE tasks
-- **Model Module** (`glue_transformer.py`): Defines the Lightning module with training/validation logic
-- **Training Script** (`train.py`): Orchestrates the training process with logging and checkpointing
-
-## 📝 Model Details
-
-- **Base Model**: DistilBERT (distilbert-base-uncased)
-- **Task**: MRPC (Microsoft Research Paraphrase Corpus)
-- **Task Type**: Binary classification (paraphrase detection)
-- **Optimizer**: AdamW with weight decay
-- **Learning Rate Schedulers**: Linear, Cosine, or Constant with warmup
-- **Training Duration**: 3 epochs (default)
-
 ## 📄 License
 
 This project is provided for educational purposes.
-
-## 🙏 Acknowledgments
-
-- Adapted from [PyTorch Lightning GLUE example](https://lightning.ai/docs/pytorch/stable/notebooks/lightning_examples/text-transformers.html)
-- Built with [Hugging Face Transformers](https://huggingface.co/transformers/)
-- Experiment tracking powered by [Weights & Biases](https://wandb.ai)
